@@ -293,6 +293,13 @@ def main():
         help='checkpoint file path to resume training. (default="")',
     )
     parser.add_argument(
+        "--pretrained",
+        default="",
+        type=str,
+        nargs="?",
+        help='checkpoint file path to pretrained weights. (default="")',
+    )
+    parser.add_argument(
         "--verbose",
         type=int,
         default=1,
@@ -424,6 +431,11 @@ def main():
         tacotron2._build()
         tacotron2.summary()
 
+        # DIFFERENCE: Fine tune with pretrained weights
+        if args.pretrained:
+            print("LOADING PRETRAINED WEIGHTS")
+            tacotron2.load_weights(args.pretrained, by_name=True, skip_mismatch=True)
+
         # AdamW for tacotron2
         learning_rate_fn = tf.keras.optimizers.schedules.PolynomialDecay(
             initial_learning_rate=config["optimizer_params"]["initial_learning_rate"],
@@ -463,8 +475,9 @@ def main():
             resume=args.resume,
         )
     except KeyboardInterrupt:
-        trainer.save_checkpoint()
-        logging.info(f"Successfully saved checkpoint @ {trainer.steps}steps.")
+        #trainer.save_checkpoint()
+        #logging.info(f"Successfully saved checkpoint @ {trainer.steps}steps.")
+        logging.info("Keyboard interrupt")
 
 
 if __name__ == "__main__":
