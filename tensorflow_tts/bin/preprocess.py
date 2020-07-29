@@ -31,6 +31,7 @@ from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
 from tensorflow_tts.processor import LJSpeechProcessor
+from tensorflow_tts.processor import MultiSpeakerProcessor
 from tensorflow_tts.utils import remove_outlier
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -273,6 +274,110 @@ def preprocess():
     train_split, valid_split = train_test_split(
         processor.items, test_size=config["test_size"], random_state=42, shuffle=True,
     )
+    logging.info(f"Training items: {len(train_split)}")
+    logging.info(f"Validation items: {len(valid_split)}")
+
+    get_utt_id = lambda x: os.path.split(x[1])[-1].split(".")[0]
+    train_utt_ids = [get_utt_id(x) for x in train_split]
+    valid_utt_ids = [get_utt_id(x) for x in valid_split]
+
+    # save train and valid utt_ids to track later
+    np.save(os.path.join(config["outdir"], "train_utt_ids.npy"), train_utt_ids)
+    np.save(os.path.join(config["outdir"], "valid_utt_ids.npy"), valid_utt_ids)
+
+    # define map iterator
+    def iterator_data(items_list):
+        for item in items_list:
+            yield processor.get_one_sample(item)
+
+    train_iterator_data = iterator_data(train_split)
+    valid_iterator_data = iterator_data(valid_split)
+
+    p = Pool(config["n_cpus"])
+
+    # preprocess train files and get statistics for normalizing
+    partial_fn = partial(gen_audio_features, config=config)
+    train_map = p.imap_unordered(
+        partial_fn,
+        tqdm(train_iterator_data, total=len(train_split), desc="[Preprocessing train]"),
+        chunksize=10,
+    )
+    # init scaler for multiple features
+    scaler_mel = StandardScaler(copy=False)
+    scaler_energy = StandardScaler(copy=False)
+    scaler_f0 = StandardScaler(copy=False)
+
+    for mel, energy, f0, features in train_map:
+        save_features_to_file(features, "train", config)
+        # remove outliers
+        energy = remove_outlier(energy)
+        f0 = remove_outlier(f0)
+        # partial fitting of scalers
+        scaler_mel.partial_fit(mel)
+        scaler_energy.partial_fit(energy[energy != 0].reshape(-1, 1))
+        scaler_f0.partial_fit(f0[f0 != 0].reshape(-1, 1))
+
+    # save statistics to file
+    logging.info("Saving computed statistics.")
+    scaler_list = [(scaler_mel, ""), (scaler_energy, "_energy"), (scaler_f0, "_f0")]
+    save_statistics_to_file(scaler_list, config)
+
+    # preprocess valid files
+    partial_fn = partial(gen_audio_features, config=config)
+    valid_map = p.imap_unordered(
+        partial_fn,
+        tqdm(valid_iterator_data, total=len(valid_split), desc="[Preprocessing valid]"),
+        chunksize=10,
+    )
+    for *_, features in valid_map:
+        save_features_to_file(features, "valid", config)
+
+def preprocess_multispeaker():
+    """Run preprocessing process and compute statistics for normalizing."""
+    config = parse_and_config()
+
+    # DIFFERENCE
+    dataset_processor = {
+        "multispeaker": MultiSpeakerProcessor # TODO
+    }
+
+    logging.info(f"Selected '{config['dataset']}' processor.")
+    processor = dataset_processor[config["dataset"]](
+        config["rootdir"], cleaner_names="english_cleaners"
+    )
+
+    # check output directories
+    build_dir = lambda x: [
+        os.makedirs(os.path.join(config["outdir"], x, y), exist_ok=True)
+        for y in ["raw-feats", "wavs", "ids", "raw-f0", "raw-energies"]
+    ]
+    build_dir("train")
+    build_dir("valid")
+
+    # DIFFERENCE
+    bul_items = processor.items[:671]
+    synd_items = processor.items[671:]
+    assert (
+        len(bul_items) == 671 and len(synd_items) == 264
+    ), f"SPLIT WAS UNSUCCESSFUL bul:{len(bul_items)} synd:{len(synd_items)}"
+
+    train_split = []
+    valid_split = []
+    # build train test split
+    bul_train_split, bul_valid_split = train_test_split(
+        bul_items, test_size=config["test_size"], random_state=42, shuffle=True,
+    )
+    synd_train_split, synd_valid_split = train_test_split(
+        synd_items, test_size=config["test_size"], random_state=42, shuffle=True,
+    )
+    train_split.extend(bul_train_split)
+    train_split.extend(synd_train_split)
+    valid_split.extend(bul_valid_split)
+    valid_split.extend(synd_valid_split)
+    assert (
+        len(train_split) + len(valid_split) == 935
+    ), f"SPLIT WAS UNSUCCESSFUL train:{len(train_split)} valid:{len(valid_split)}"
+
     logging.info(f"Training items: {len(train_split)}")
     logging.info(f"Validation items: {len(valid_split)}")
 
