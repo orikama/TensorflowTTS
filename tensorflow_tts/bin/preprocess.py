@@ -61,7 +61,7 @@ def parse_and_config():
         "--dataset",
         type=str,
         default="ljspeech",
-        choices=["ljspeech"],
+        choices=["ljspeech","multispeaker"],
         help="Dataset to preprocess. Currently only LJSpeech.",
     )
     parser.add_argument(
