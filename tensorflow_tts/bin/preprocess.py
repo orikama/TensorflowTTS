@@ -30,8 +30,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
-from tensorflow_tts.processor import LJSpeechProcessor
-from tensorflow_tts.processor import MultiSpeakerProcessor
+from tensorflow_tts.processor import LJSpeechProcessor, MultiSpeakerProcessor
 from tensorflow_tts.utils import remove_outlier
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
