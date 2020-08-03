@@ -357,7 +357,7 @@ def preprocess_multispeaker():
     bul_items = processor.items[:671]
     synd_items = processor.items[671:]
     assert (
-        len(bul_items) == 671 and len(synd_items) == 264
+        len(bul_items) == 671 and len(synd_items) == 302
     ), f"SPLIT WAS UNSUCCESSFUL bul:{len(bul_items)} synd:{len(synd_items)}"
 
     train_split = []
@@ -374,7 +374,7 @@ def preprocess_multispeaker():
     valid_split.extend(bul_valid_split)
     valid_split.extend(synd_valid_split)
     assert (
-        len(train_split) + len(valid_split) == 935
+        len(train_split) + len(valid_split) == 973
     ), f"SPLIT WAS UNSUCCESSFUL train:{len(train_split)} valid:{len(valid_split)}"
 
     logging.info(f"Training items: {len(train_split)}")
