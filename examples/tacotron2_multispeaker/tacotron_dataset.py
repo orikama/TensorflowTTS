@@ -118,10 +118,15 @@ class CharactorMelDataset(AbstractDataset):
         self.max_char_length = np.max(char_lengths) + 1  # +1 for eos
 
         # DIFFERENCE
-        self.speakers_map = {"bul": 0, "synd": 1}
+        self.speakers_map = {}
+        sp_id = 0
+        for i in self.utt_ids:
+            sp_name = i.split("-")[0]
+            if sp_name not in self.speakers_map:
+                self.speakers_map[sp_name] = sp_id
+                sp_id += 1
         self.speakers = [self.speakers_map[i.split("-")[0]] for i in self.utt_ids]
-        #for i, utt_id in enumerate(self.utt_ids):
-        #    print(f"{self.utt_ids[i]} {self.speakers[i]}")
+
 
         if np.max(mel_lengths) % self.reduction_factor == 0:
             self.max_mel_length = np.max(mel_lengths)
@@ -167,9 +172,9 @@ class CharactorMelDataset(AbstractDataset):
                 self.max_mel_length // self.reduction_factor,
                 self.g,
             )
-            speaker_id = self.speakers[i] # DIFFERENCE
-
-            print(f"{utt_id} {speaker_id} {charactor}")
+            # DIFFERENCE
+            speaker_id = self.speakers[i]
+            print(f"{utt_id} {speaker_id}")
 
             items = {
                 "utt_ids": utt_id,

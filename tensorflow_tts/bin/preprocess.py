@@ -337,7 +337,7 @@ def preprocess_multispeaker():
 
     # DIFFERENCE
     dataset_processor = {
-        "multispeaker": MultiSpeakerProcessor # TODO
+        "multispeaker": MultiSpeakerProcessor
     }
 
     logging.info(f"Selected '{config['dataset']}' processor.")
@@ -376,6 +376,7 @@ def preprocess_multispeaker():
     assert (
         len(train_split) + len(valid_split) == 973
     ), f"SPLIT WAS UNSUCCESSFUL train:{len(train_split)} valid:{len(valid_split)}"
+
 
     logging.info(f"Training items: {len(train_split)}")
     logging.info(f"Validation items: {len(valid_split)}")
