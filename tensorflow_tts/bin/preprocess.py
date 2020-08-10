@@ -30,7 +30,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
-from tensorflow_tts.processor import LJSpeechProcessor, MultiSpeakerProcessor
+from tensorflow_tts.processor import LJSpeechProcessor
+from tensorflow_tts.processor import MultiSpeakerProcessor
+from tensorflow_tts.processor import KSSProcessor
 from tensorflow_tts.utils import remove_outlier
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -60,8 +62,8 @@ def parse_and_config():
         "--dataset",
         type=str,
         default="ljspeech",
-        choices=["ljspeech","multispeaker"],
-        help="Dataset to preprocess. Currently only LJSpeech.",
+        choices=["ljspeech", "kss", "multispeaker"],
+        help="Dataset to preprocess.",
     )
     parser.add_argument(
         "--config", type=str, required=True, help="YAML format configuration file."
@@ -175,12 +177,13 @@ def gen_audio_features(item, config):
     assert len(mel) * hop_size == len(audio)
 
     # extract raw pitch
-    f0, _ = pw.dio(
+    _f0, t = pw.dio(
         audio.astype(np.double),
         fs=sampling_rate,
         f0_ceil=fmax,
         frame_period=1000 * hop_size / sampling_rate,
     )
+    f0 = pw.stonemask(audio.astype(np.double), _f0, t, sampling_rate)
     if len(f0) >= len(mel):
         f0 = f0[: len(mel)]
     else:
@@ -254,11 +257,17 @@ def preprocess():
 
     dataset_processor = {
         "ljspeech": LJSpeechProcessor,
+        "kss": KSSProcessor
+    }
+
+    dataset_cleaner = {
+        "ljspeech": "english_cleaners",
+        "kss": "korean_cleaners"
     }
 
     logging.info(f"Selected '{config['dataset']}' processor.")
     processor = dataset_processor[config["dataset"]](
-        config["rootdir"], cleaner_names="english_cleaners"
+        config["rootdir"], cleaner_names=dataset_cleaner[config["dataset"]]
     )
 
     # check output directories
@@ -310,7 +319,6 @@ def preprocess():
         save_features_to_file(features, "train", config)
         # remove outliers
         energy = remove_outlier(energy)
-        f0 = remove_outlier(f0)
         # partial fitting of scalers
         scaler_mel.partial_fit(mel)
         scaler_energy.partial_fit(energy[energy != 0].reshape(-1, 1))
