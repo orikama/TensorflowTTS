@@ -449,6 +449,10 @@ def main():
         generator.summary()
         discriminator.summary()
 
+        if args.pretrained:
+            print("LOADING PRETRAINED WEIGHTS")
+            generator.load_weights(args.pretrained)
+
         # define optimizer
         generator_lr_fn = getattr(
             tf.keras.optimizers.schedules, config["generator_optimizer_params"]["lr_fn"]
