@@ -287,6 +287,13 @@ def main():
         help='checkpoint file path to resume training. (default="")',
     )
     parser.add_argument(
+        "--pretrained",
+        default="",
+        type=str,
+        nargs="?",
+        help='checkpoint file path to pretrained weights. (default="")',
+    )
+    parser.add_argument(
         "--verbose",
         type=int,
         default=1,
