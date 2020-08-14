@@ -495,8 +495,9 @@ def main():
             resume=args.resume,
         )
     except KeyboardInterrupt:
-        trainer.save_checkpoint()
-        logging.info(f"Successfully saved checkpoint @ {trainer.steps}steps.")
+        #trainer.save_checkpoint()
+        #logging.info(f"Successfully saved checkpoint @ {trainer.steps}steps.")
+        logging.info("Keyboard interrupt")
 
 
 if __name__ == "__main__":
