@@ -375,6 +375,7 @@ def main():
         raise ValueError("Only npy are supported.")
 
     train_dataset = CharactorMelDataset(
+        dataset=config["tacotron2_params"]["dataset"],
         root_dir=args.train_dir,
         charactor_query=charactor_query,
         mel_query=mel_query,
@@ -401,6 +402,7 @@ def main():
     )
 
     valid_dataset = CharactorMelDataset(
+        dataset=config["tacotron2_params"]["dataset"],
         root_dir=args.dev_dir,
         charactor_query=charactor_query,
         mel_query=mel_query,
