@@ -1,16 +1,9 @@
-
-# This is the hyperparameter configuration file for Multi-Band MelGAN.
-# Please make sure this is adjusted for the LJSpeech dataset. If you want to
-# apply to the other dataset, you might need to carefully change some parameters.
-# This configuration performs 1000k iters.
-
 ###########################################################
 #                FEATURE EXTRACTION SETTING               #
 ###########################################################
 sampling_rate: 22050
 hop_size: 256            # Hop size.
 format: "npy"
-
 
 ###########################################################
 #         GENERATOR NETWORK ARCHITECTURE SETTING          #
@@ -80,7 +73,7 @@ is_shuffle: true               # shuffle dataset after each epoch.
 generator_optimizer_params:
     lr_fn: "PiecewiseConstantDecay"
     lr_params: 
-        boundaries: [50000, 100000, 150000, 200000, 250000, 300000, 350000]
+        boundaries: [100000, 200000, 300000, 400000, 500000, 600000, 700000]
         values: [0.0005, 0.0005, 0.00025, 0.000125, 0.0000625, 0.00003125, 0.000015625, 0.000001]
     amsgrad: false
 
@@ -94,11 +87,11 @@ discriminator_optimizer_params:
 ###########################################################
 #                    INTERVAL SETTING                     #
 ###########################################################
-discriminator_train_start_steps: 100000  # steps begin training discriminator
-train_max_steps: 4000000                 # Number of training steps.
-save_interval_steps: 20000               # Interval steps to save checkpoint.
-eval_interval_steps: 10000                # Interval steps to evaluate the network.
-log_interval_steps: 200                  # Interval steps to record the training log.
+discriminator_train_start_steps: 200000  # steps begin training discriminator
+train_max_steps: 1000000                 # Number of training steps.
+save_interval_steps: 25000               # Interval steps to save checkpoint.
+eval_interval_steps: 12500                # Interval steps to evaluate the network.
+log_interval_steps: 500                  # Interval steps to record the training log.
 
 ###########################################################
 #                     OTHER SETTING                       #
