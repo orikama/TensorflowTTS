@@ -83,6 +83,9 @@ class LibriTTSProcessor(BaseProcessor):
 
         return sample
 
+    def setup_eos_token(self):
+        return None # because we do not use this 
+
     def text_to_sequence(self, text):
         if (
             self.mode == "train"
@@ -91,8 +94,7 @@ class LibriTTSProcessor(BaseProcessor):
         else:
             return self.inference_text_to_seq(text)
 
-    @staticmethod
-    def inference_text_to_seq(text: str):
+    def inference_text_to_seq(self, text: str):
         return self.symbols_to_ids(self.text_to_ph(text))
 
     def symbols_to_ids(self, symbols_list: list):
